@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Joshua Jose — Video Editor & Motion Graphics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #080808;
+      --dark: #0e0e10;
+      --mid: #161618;
+      --border: #2c2c2e;
+      --muted: #505050;
+      --silver: #b0b0b8;
+      --white: #ececf0;
+      --grain-opacity: 0.08;
+      /* Silver gradient tokens */
+      --sg: linear-gradient(135deg, #e8e8e8 0%, #a0a0a8 30%, #ffffff 55%, #8a8a92 75%, #d0d0d8 100%);
+      --sg-flat: linear-gradient(90deg, #c0c0c8 0%, #f0f0f0 40%, #a8a8b0 70%, #e0e0e8 100%);
+      --sg-vert: linear-gradient(180deg, #ffffff 0%, #a0a0aa 40%, #d8d8e0 100%);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Space Grotesk', sans-serif;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ── LAYERED GRAINY BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      /* Purple-grey blobs like the reference image */
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 30%, rgba(70,65,95,0.55) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 70%, rgba(50,48,72,0.45) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(30,28,48,0.3) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 70% at 10% 80%, rgba(60,58,85,0.35) 0%, transparent 70%),
+        #0a0a0e;
+      pointer-events: none;
+      z-index: 0;
+    }
+    /* Grain noise layer */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 1;
+      mix-blend-mode: overlay;
+      animation: grainShift 0.5s steps(1) infinite;
+    }
+    @keyframes grainShift {
+      0%  { transform: translate(0,0); }
+      20% { transform: translate(-3%,-4%); }
+      40% { transform: translate(4%,2%); }
+      60% { transform: translate(-2%,5%); }
+      80% { transform: translate(3%,-2%); }
+      100%{ transform: translate(0,0); }
+    }
+
+    /* Everything above the grain */
+    nav, section, footer, .hero { position: relative; z-index: 2; }
+
+    /* ── SILVER GRADIENT UTILITY ── */
+    .silver-text {
+      background: var(--sg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .silver-border-box {
+      background: var(--sg-flat);
+      border-radius: 2px;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 3rem;
+      background: linear-gradient(to bottom, rgba(8,8,8,0.97) 0%, transparent 100%);
+    }
+    .nav-logo img {
+      height: 38px;
+      width: 38px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 1px solid #333;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--silver);
+      text-decoration: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-family: 'Space Mono', monospace;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 3rem 5rem;
+      overflow: hidden;
+    }
+    .hero-photo {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      height: 92vh;
+      width: auto;
+      object-fit: cover;
+      object-position: top center;
+      filter: grayscale(100%) contrast(1.08) brightness(0.85);
+      -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.75) 20%, rgba(0,0,0,0) 80%);
+      mask-image: linear-gradient(to left, rgba(0,0,0,0.75) 20%, rgba(0,0,0,0) 80%);
+      opacity: 0.5;
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 700px;
+    }
+    .hero-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      background: var(--sg-flat);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-name {
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      font-weight: 700;
+      line-height: 0.93;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+      background: var(--sg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-name span {
+      display: block;
+      font-weight: 700;
+      background: var(--sg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-tagline {
+      font-size: 1rem;
+      color: var(--silver);
+      max-width: 420px;
+      line-height: 1.75;
+      margin-bottom: 2.5rem;
+      font-weight: 300;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--sg-flat);
+      color: #111;
+      text-decoration: none;
+      padding: 0.85rem 2rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .hero-cta:hover { opacity: 0.85; transform: translateY(-2px); }
+    .hero-cta svg { width: 14px; height: 14px; }
+
+    .hero-scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      right: 3rem;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+    }
+    .scroll-line {
+      width: 1px;
+      height: 60px;
+      background: var(--sg-vert);
+      animation: scrollPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.25; transform: scaleY(1); }
+      50% { opacity: 1; transform: scaleY(1.1); }
+    }
+
+    /* ── SECTIONS ── */
+    section { padding: 7rem 3rem; }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      background: var(--sg-flat);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: inline-block;
+    }
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 4rem;
+      background: var(--sg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .divider {
+      width: 40px;
+      height: 1px;
+      background: var(--sg-flat);
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── ABOUT ── */
+    .about {
+      background: rgba(14,14,16,0.85);
+      border-top: 1px solid var(--border);
+    }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+    }
+    .about-photo-wrap { position: relative; }
+    .about-photo {
+      width: 100%;
+      aspect-ratio: 4/5;
+      object-fit: cover;
+      object-position: top;
+      filter: grayscale(100%) contrast(1.05);
+    }
+    .about-photo-border {
+      position: absolute;
+      inset: -12px;
+      border: 1px solid #333;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .about-photo-wrap > * { position: relative; z-index: 1; }
+    .about-badge {
+      position: absolute;
+      bottom: -1rem;
+      right: -1rem;
+      background: var(--sg-flat);
+      color: #111;
+      padding: 0.85rem 1.2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      line-height: 1.6;
+      z-index: 2;
+    }
+    .about-text p {
+      color: var(--silver);
+      font-size: 0.97rem;
+      line-height: 1.85;
+      font-weight: 300;
+      margin-bottom: 1.5rem;
+    }
+    .about-info { display: flex; flex-direction: column; gap: 0.65rem; margin-top: 2rem; }
+    .about-info-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--silver);
+      font-size: 0.84rem;
+    }
+    .about-info-row svg { flex-shrink: 0; opacity: 0.7; }
+    .about-info-row a { color: var(--silver); text-decoration: none; transition: color 0.2s; }
+    .about-info-row a:hover { color: var(--white); }
+
+    /* ── FEATURED VIDEO ── */
+    .featured {
+      background: rgba(8,8,8,0.9);
+      border-top: 1px solid var(--border);
+    }
+    .featured-video-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--mid);
+      overflow: hidden;
+      border: 1px solid #2a2a2a;
+    }
+    .featured-video-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .video-overlay-tag {
+      position: absolute;
+      top: 1.2rem;
+      left: 1.2rem;
+      background: var(--sg-flat);
+      color: #111;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.63rem;
+      letter-spacing: 0.18em;
+      padding: 0.3rem 0.75rem;
+      text-transform: uppercase;
+      z-index: 5;
+      font-weight: 700;
+    }
+
+    /* ── SHORT FORM GRID ── */
+    .work {
+      background: rgba(14,14,16,0.85);
+      border-top: 1px solid var(--border);
+    }
+    .work-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .work-item {
+      position: relative;
+      background: var(--mid);
+      overflow: hidden;
+      border: 1px solid #252528;
+    }
+    .work-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(8,8,8,0.85) 0%, transparent 55%);
+      z-index: 2;
+      transition: opacity 0.3s;
+    }
+    .work-item:hover::after { opacity: 0.5; }
+    .work-item iframe {
+      width: 100%;
+      aspect-ratio: 9/16;
+      border: none;
+      display: block;
+      pointer-events: none;
+    }
+    .work-item-label {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      z-index: 3;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--silver);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .work-item-num {
+      position: absolute;
+      top: 0.8rem;
+      right: 0.8rem;
+      z-index: 3;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--muted);
+    }
+
+    /* ── TOOLS ── */
+    .tools {
+      background: rgba(8,8,8,0.9);
+      border-top: 1px solid var(--border);
+    }
+    .tools-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    /* Silver gradient box chips */
+    .tool-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.75rem 1.3rem;
+      font-size: 0.82rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: #111;
+      background: var(--sg-flat);
+      transition: opacity 0.2s, transform 0.15s;
+      cursor: default;
+    }
+    .tool-chip:hover { opacity: 0.88; transform: translateY(-2px); }
+    .tool-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      font-weight: 800;
+      font-family: 'Space Mono', monospace;
+      flex-shrink: 0;
+      letter-spacing: 0;
+    }
+    .ti-pr { background: #9999FF; color: #000; }
+    .ti-ae { background: #9999FF; color: #1a0a3a; }
+    .ti-ps { background: #26C9FF; color: #001830; }
+    .ti-ai { background: #FF7C00; color: #1A0500; }
+    .ti-bl { background: #E87D0D; color: #fff; }
+    .ti-cc { background: #1a1a1a; color: #fff; border: 1px solid #444; }
+    .ti-cv { background: #7ED1FC; color: #003366; }
+
+    .tool-icon-img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      flex-shrink: 0;
+      border-radius: 5px;
+    }
+
+    /* ── CONTACT ── */
+    .contact {
+      background: rgba(14,14,16,0.85);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .contact .section-title { margin-bottom: 1rem; }
+    .contact-sub {
+      color: var(--silver);
+      font-size: 0.97rem;
+      font-weight: 300;
+      max-width: 440px;
+      margin: 0 auto 3rem;
+      line-height: 1.75;
+    }
+    .contact-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+    }
+    /* Silver gradient border contact links */
+    .contact-link {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--silver);
+      text-decoration: none;
+      padding: 0.85rem 1.5rem;
+      font-size: 0.78rem;
+      font-family: 'Space Mono', monospace;
+      transition: color 0.2s, background 0.2s;
+      background: transparent;
+      /* Silver gradient border via outline trick */
+      border: 1px solid transparent;
+      background-clip: padding-box;
+      box-shadow: 0 0 0 1px rgba(180,180,190,0.3);
+    }
+    .contact-link::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: var(--sg-flat);
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .contact-link:hover { color: #111; }
+    .contact-link:hover::before { opacity: 1; }
+    .contact-link svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 2rem 3rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── ANIMATIONS ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── SHORT-FORM STAGGER ── */
+    .work-item {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .work-item.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 1.1rem 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      section { padding: 5rem 1.5rem; }
+      .hero { padding: 0 1.5rem 4rem; }
+      .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .work-grid { grid-template-columns: 1fr; }
+      .hero-photo { opacity: 0.2; width: 100%; }
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .hero-name { font-size: 3rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <img src="LOGO_PLACEHOLDER" alt="JJ Visuals" />
+  </div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#tools">Tools</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <img
+    src="/mnt/user-data/uploads/63637245-3b9d-408e-a9c8-1f75f925ba83.jpg"
+    alt="Joshua Jose"
+    class="hero-photo"
+  />
+  <div class="hero-content">
+    <p class="hero-eyebrow">Video Editor &amp; Motion Graphics Animator</p>
+    <h1 class="hero-name">
+      Joshua<span>Jose</span>
+    </h1>
+    <p class="hero-tagline">Crafting stories through motion, color, and rhythm. Based in Manila, Philippines.</p>
+    <a href="#work" class="hero-cta">
+      View My Work
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M3 8h10M9 4l4 4-4 4"/>
+      </svg>
+    </a>
+  </div>
+  <div class="hero-scroll-hint">
+    <div class="scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <p class="section-label">About Me</p>
+  <div class="divider"></div>
+  <div class="about-grid">
+    <div class="about-photo-wrap fade-in">
+      <div class="about-photo-border"></div>
+      <img
+        src="/mnt/user-data/uploads/63637245-3b9d-408e-a9c8-1f75f925ba83.jpg"
+        alt="Joshua Jose"
+        class="about-photo"
+      />
+      <div class="about-badge">
+        Video Editor<br>&amp; Motion Graphics<br>Animator
+      </div>
+    </div>
+    <div class="about-text fade-in">
+      <h2 class="section-title" style="margin-bottom:1.5rem;">Hello,<br>I'm Joshua!</h2>
+      <p>
+        Hi, I'm Joshua, a Video Editor and Motion Graphics Animator with a passion for creating engaging and impactful content. With training in broadcasting journalism, I developed strong skills in storytelling, visual communication, and working efficiently under pressure.
+      </p>
+      <p>
+        I specialize in editing short-form and long-form videos designed to capture attention and keep audiences engaged. I am committed to delivering high-quality work, meeting deadlines, and continuously improving my skills to help bring creative ideas to life.
+      </p>
+      <div class="about-info">
+        <div class="about-info-row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          Manila, Philippines
+        </div>
+        <div class="about-info-row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.63a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .82h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          <a href="tel:+639999532075">+63 999 953 2075</a>
+        </div>
+        <div class="about-info-row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <a href="mailto:Joshuajose311@gmail.com">Joshuajose311@gmail.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED VIDEO -->
+<section class="featured" id="featured">
+  <p class="section-label">Featured Work</p>
+  <div class="divider"></div>
+  <h2 class="section-title fade-in">Portfolio<br>Highlight</h2>
+  <div class="featured-video-wrap fade-in">
+    <div class="video-overlay-tag">Featured</div>
+    <iframe
+      src="https://drive.google.com/file/d/1Vron_BnInJ70bzvFeb1hcDElp0LQ45h5/preview"
+      allow="autoplay"
+      allowfullscreen
+    ></iframe>
+  </div>
+</section>
+
+<!-- SHORT FORM EDITS -->
+<section class="work" id="work">
+  <p class="section-label">Short Form</p>
+  <div class="divider"></div>
+  <h2 class="section-title fade-in">Short Form<br>Edits</h2>
+  <div class="work-grid">
+    <div class="work-item">
+      <span class="work-item-num">01</span>
+      <iframe
+        src="https://drive.google.com/file/d/1COBEx5CkfXN8DIxYUKqtgzT8Tx8aLy0H/preview"
+        allow="autoplay"
+        allowfullscreen
+      ></iframe>
+      <span class="work-item-label">Short Edit — 01</span>
+    </div>
+    <div class="work-item">
+      <span class="work-item-num">02</span>
+      <iframe
+        src="https://drive.google.com/file/d/1GafzWeaAvxyHtC-DSUcJt2dKMc8LC9t7/preview"
+        allow="autoplay"
+        allowfullscreen
+      ></iframe>
+      <span class="work-item-label">Short Edit — 02</span>
+    </div>
+    <div class="work-item">
+      <span class="work-item-num">03</span>
+      <iframe
+        src="https://drive.google.com/file/d/19FpX_7F89N2_W4Isz5CV27HkeBBLEnHZ/preview"
+        allow="autoplay"
+        allowfullscreen
+      ></iframe>
+      <span class="work-item-label">Short Edit — 03</span>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section class="tools" id="tools">
+  <p class="section-label">My Toolkit</p>
+  <div class="divider"></div>
+  <h2 class="section-title fade-in">Tools I<br>Use</h2>
+  <div class="tools-grid fade-in">
+    <div class="tool-chip"><img class="tool-icon-img" src="/mnt/user-data/uploads/OIP-removebg-preview__1_.png" alt="Premiere Pro">Adobe Premiere Pro</div>
+    <div class="tool-chip"><img class="tool-icon-img" src="/mnt/user-data/uploads/OIP__1_-removebg-preview.png" alt="After Effects">Adobe After Effects</div>
+    <div class="tool-chip"><img class="tool-icon-img" src="/mnt/user-data/uploads/OIP__4_-removebg-preview.png" alt="Photoshop">Adobe Photoshop</div>
+    <div class="tool-chip"><img class="tool-icon-img" src="/mnt/user-data/uploads/OIP__2_-removebg-preview.png" alt="Illustrator">Adobe Illustrator</div>
+    <div class="tool-chip"><img class="tool-icon-img" src="/mnt/user-data/uploads/icon.png" alt="Blender">Blender</div>
+    <div class="tool-chip"><img class="tool-icon-img" src="/mnt/user-data/uploads/1200x630wa-removebg-preview.png" alt="CapCut">CapCut</div>
+    <div class="tool-chip"><img class="tool-icon-img" src="/mnt/user-data/uploads/OIP__3_-removebg-preview.png" alt="Canva">Canva</div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <p class="section-label">Let's Work Together</p>
+  <div class="divider" style="margin: 1rem auto 0;"></div>
+  <h2 class="section-title fade-in" style="margin-top:2rem;">Get In Touch</h2>
+  <p class="contact-sub">Have a project in mind? I'd love to help you bring it to life. Reach out through any of the channels below.</p>
+  <div class="contact-links fade-in">
+    <a href="mailto:Joshuajose311@gmail.com" class="contact-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Joshuajose311@gmail.com
+    </a>
+    <a href="tel:+639999532075" class="contact-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.63a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .82h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      +63 999 953 2075
+    </a>
+    <a href="https://drive.google.com/file/d/1Vron_BnInJ70bzvFeb1hcDElp0LQ45h5/view" target="_blank" class="contact-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Watch Portfolio
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2025 Joshua Jose — All rights reserved</span>
+  <span>Manila, Philippines</span>
+</footer>
+
+<script>
+  // Generic fade-in observer
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Short-form video: staggered scroll fade — 0.3s ease, 100ms per item
+  const workItems = document.querySelectorAll('.work-item');
+  const workObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const index = Array.from(workItems).indexOf(entry.target);
+        entry.target.style.transitionDelay = `${index * 100}ms`;
+        entry.target.classList.add('visible');
+        workObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  workItems.forEach(el => workObserver.observe(el));
+</script>
+</body>
+</html>
